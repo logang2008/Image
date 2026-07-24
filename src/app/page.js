@@ -31,7 +31,7 @@ export default function Home() {
   const [uploading, setUploading] = useState(false);
   const [IP, setIP] = useState('');
   const [Total, setTotal] = useState('?');
-  const [selectedOption, setSelectedOption] = useState('tgchannel'); // 初始选择第一个选项
+  const [selectedOption, setSelectedOption] = useState('r2'); // 初始选择第一个选项
   const [isAuthapi, setisAuthapi] = useState(false); // 初始选择第一个选项
   const [Loginuser, setLoginuser] = useState(''); // 初始选择第一个选项
   const [boxType, setBoxtype] = useState("img");
@@ -508,7 +508,7 @@ export default function Home() {
               <option value="tgchannel">TG_Channel</option>
               <option value="r2">R2</option>
               {/* <option value="vviptuangou">vviptuangou</option> */}
-              <option value="58img">58img</option>
+              {/* <option value="58img">58img</option> */}
               {/* <option value="tencent">tencent</option> */}
 
             </select>
