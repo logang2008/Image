@@ -1,5 +1,6 @@
 export const runtime = 'edge';
 import { getRequestContext } from '@cloudflare/next-on-pages';
+import { validateImageUpload, invalidUploadResponse } from '@/lib/uploadSecurity';
 
 
 
@@ -32,6 +33,16 @@ export async function POST(request) {
         'Access-Control-Max-Age': '86400', // 24小时
       },
     });
+  }
+
+  try {
+    const uploadForm = await request.clone().formData();
+    const check = await validateImageUpload(uploadForm.get('file'));
+    if (!check.ok) {
+      return invalidUploadResponse(check.message, corsHeaders);
+    }
+  } catch (error) {
+    return invalidUploadResponse('无法解析上传内容', corsHeaders);
   }
 
   try {

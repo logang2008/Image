@@ -1,5 +1,6 @@
 export const runtime = 'edge';
 import { getRequestContext } from '@cloudflare/next-on-pages';
+import { withFileSecurityHeaders } from '@/lib/uploadSecurity';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -18,11 +19,7 @@ function getContentType(fileName) {
     'gif': 'image/gif',
     'bmp': 'image/bmp',
     'webp': 'image/webp',
-    'svg': 'image/svg+xml',
-    'pdf': 'application/pdf',
-    'txt': 'text/plain',
-    'html': 'text/html',
-    'json': 'application/json',
+    'avif': 'image/avif',
     'mp4': 'video/mp4',
     'avi': 'video/x-msvideo',
     'mov': 'video/quicktime',
@@ -86,8 +83,8 @@ export async function GET(request, { params }) {
     if (!(Referer === `${req_url.origin}/admin` || Referer === `${req_url.origin}/list` || Referer === `${req_url.origin}/`)) {
       await logRequest(env, name, Referer, clientIp);
     }
-    // 如果缓存中存在，直接返回缓存响应
-    return cachedResponse
+    // 如果缓存中存在，直接返回缓存响应（旧缓存可能缺少安全头，统一补上）
+    return withFileSecurityHeaders(cachedResponse)
   }
 
 
@@ -124,9 +121,9 @@ export async function GET(request, { params }) {
           "Access-Control-Allow-Origin": "*",
           "Content-Type": contentType
         };
-        const response_img = new Response(fileBuffer, {
+        const response_img = withFileSecurityHeaders(new Response(fileBuffer, {
           headers: responseHeaders
-        });
+        }));
 
         ctx.waitUntil(cache.put(cacheKey, response_img.clone()));
 

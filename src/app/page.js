@@ -596,6 +596,7 @@ export default function Home() {
             <input
               id="file-upload"
               type="file"
+              accept=".jpg,.jpeg,.png,.gif,.webp,.bmp,.avif"
               className="hidden"
               onChange={handleFileChange}
               multiple

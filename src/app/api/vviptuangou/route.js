@@ -1,5 +1,6 @@
 export const runtime = 'edge';
 import { getRequestContext } from '@cloudflare/next-on-pages';
+import { validateImageUpload, invalidUploadResponse } from '@/lib/uploadSecurity';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -22,8 +23,9 @@ export async function POST(request) {
 
   const formData = await request.formData();
   const file = formData.get('file'); // 使用 'image' 字段名
-  if (!file) {
-    return new Response('No file uploaded', { status: 400 });
+  const check = await validateImageUpload(file);
+  if (!check.ok) {
+    return invalidUploadResponse(check.message, corsHeaders);
   }
   try {
     const newFormData = new FormData();

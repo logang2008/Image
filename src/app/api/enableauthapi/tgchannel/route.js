@@ -1,5 +1,6 @@
 export const runtime = 'edge';
 import { getRequestContext } from '@cloudflare/next-on-pages';
+import { validateImageUpload, invalidUploadResponse } from '@/lib/uploadSecurity';
 
 
 
@@ -29,7 +30,11 @@ export async function POST(request) {
 	const Referer = request.headers.get('Referer') || "Referer";
 
 	const formData = await request.formData();
-	const fileType = formData.get('file').type;
+	const check = await validateImageUpload(formData.get('file'));
+	if (!check.ok) {
+		return invalidUploadResponse(check.message, corsHeaders);
+	}
+	const fileType = check.mime;
 
 	const req_url = new URL(request.url);
 

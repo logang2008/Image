@@ -1,5 +1,6 @@
 export const runtime = 'edge';
 import { getRequestContext } from '@cloudflare/next-on-pages';
+import { validateImageUpload, invalidUploadResponse } from '@/lib/uploadSecurity';
 
 
 
@@ -33,9 +34,17 @@ export async function POST(request) {
 	const Referer = request.headers.get('Referer') || "Referer";
 
 	const formData = await request.formData();
-	const fileType = formData.get('file').type;
-	const filename = formData.get('file').name;
 	const file = formData.get('file');
+	const check = await validateImageUpload(file);
+	if (!check.ok) {
+		return invalidUploadResponse(check.message, {
+			'Access-Control-Allow-Origin': '*',
+			'Content-Type': 'application/json'
+		});
+	}
+	// 使用 magic bytes 识别出的类型，而不是客户端自报的 type
+	const fileType = check.mime;
+	const filename = file.name;
 
 	const header = new Headers()
 	header.set("content-type", fileType)

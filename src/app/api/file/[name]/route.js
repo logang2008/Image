@@ -1,5 +1,6 @@
 export const runtime = 'edge';
 import { getRequestContext } from '@cloudflare/next-on-pages';
+import { withFileSecurityHeaders } from '@/lib/uploadSecurity';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -32,11 +33,12 @@ export async function GET(request, { params }) {
   }
 
   try {
-    const res = await fetch(`https://telegra.ph/file/${name}`, {
+    const upstream = await fetch(`https://telegra.ph/file/${name}`, {
       method: request.method,
       headers: request.headers,
       body: request.body,
     })
+    const res = withFileSecurityHeaders(upstream)
     if (Referer == req_url.origin + "/admin" || Referer == req_url.origin + "/list" || Referer == req_url.origin + "/") {
       return res
     } else if (!env.IMG) {
