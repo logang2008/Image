@@ -18,11 +18,12 @@ export async function POST(request) {
   // console.log(dd);
   try {
     let { page, query } = await request.json()
+    const offset = Math.max(0, parseInt(page, 10) || 0) * 10
 
     if (query) {
-      const ps = env.IMG.prepare(`SELECT tgimglog.*, imginfo.rating,imginfo.total FROM tgimglog JOIN imginfo ON tgimglog.url = imginfo.url WHERE tgimglog.url LIKE '%${query}%' ORDER BY tgimglog.id DESC LIMIT 10 OFFSET ${page} * 10`);
+      const ps = env.IMG.prepare('SELECT tgimglog.*, imginfo.rating,imginfo.total FROM tgimglog JOIN imginfo ON tgimglog.url = imginfo.url WHERE tgimglog.url LIKE ? ORDER BY tgimglog.id DESC LIMIT 10 OFFSET ?').bind(`%${query}%`, offset);
       const { results } = await ps.all()
-      const total = await env.IMG.prepare(`SELECT COUNT(*) as total FROM tgimglog WHERE url LIKE '%${query}%'`).first()
+      const total = await env.IMG.prepare('SELECT COUNT(*) as total FROM tgimglog WHERE url LIKE ?').bind(`%${query}%`).first()
       return Response.json({
         "code": 200,
         "success": true,
@@ -32,7 +33,7 @@ export async function POST(request) {
         "total": total.total
       });
     } else {
-      const ps = env.IMG.prepare(`SELECT tgimglog.*, imginfo.rating,imginfo.total FROM tgimglog JOIN imginfo ON tgimglog.url = imginfo.url ORDER BY tgimglog.id DESC LIMIT 10 OFFSET  ${page} * 10`);
+      const ps = env.IMG.prepare('SELECT tgimglog.*, imginfo.rating,imginfo.total FROM tgimglog JOIN imginfo ON tgimglog.url = imginfo.url ORDER BY tgimglog.id DESC LIMIT 10 OFFSET ?').bind(offset);
       const { results } = await ps.all()
       const total = await env.IMG.prepare(`SELECT COUNT(*) as total FROM tgimglog`).first()
       return Response.json({
