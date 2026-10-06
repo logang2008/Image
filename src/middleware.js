@@ -1,5 +1,5 @@
 import { auth } from "@/auth"
-import { timingSafeEqual, getBearerToken } from "@/lib/apiToken"
+import { isValidApiToken } from "@/lib/apiToken"
 
 
 const ROOT = '/';
@@ -37,10 +37,9 @@ export default auth(async (req) => {
         }
         else if (isAuthAPI) {
 
-            // Bearer token 通道：携带有效 UPLOAD_API_TOKEN 的自动化调用直接放行，
+            // API token 通道：携带有效 token（登录后经 /api/user/token 领取）的请求直接放行，
             // 不受 ENABLE_AUTH_API 开关影响（与 requireLogin 保持一致）
-            const apiToken = getBearerToken(req);
-            if (apiToken && process.env.UPLOAD_API_TOKEN && timingSafeEqual(apiToken, process.env.UPLOAD_API_TOKEN)) {
+            if (await isValidApiToken(req)) {
                 return
             }
 
