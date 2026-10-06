@@ -1,5 +1,7 @@
 export const runtime = 'edge';
 import { getRequestContext } from '@cloudflare/next-on-pages';
+import { validateImageUpload, invalidUploadResponse } from '@/lib/uploadSecurity';
+import { requireLogin } from '@/lib/requireLogin';
 
 
 
@@ -11,6 +13,9 @@ const corsHeaders = {
 };
 
 export async function POST(request) {
+	const unauthorized = await requireLogin(corsHeaders);
+	if (unauthorized) return unauthorized;
+
 	const { env, cf, ctx } = getRequestContext();
 	
 	if (!env.TG_BOT_TOKEN || !env.TG_CHAT_ID) {
@@ -29,7 +34,11 @@ export async function POST(request) {
 	const Referer = request.headers.get('Referer') || "Referer";
 
 	const formData = await request.formData();
-	const fileType = formData.get('file').type;
+	const check = await validateImageUpload(formData.get('file'));
+	if (!check.ok) {
+		return invalidUploadResponse(check.message, corsHeaders);
+	}
+	const fileType = check.mime;
 
 	const req_url = new URL(request.url);
 
@@ -195,9 +204,8 @@ const getFile = async (response) => {
 async function insertImageData(env, src, referer, ip, rating, time) {
 	try {
 		const instdata = await env.prepare(
-			`INSERT INTO imginfo (url, referer, ip, rating, total, time)
-           VALUES ('${src}', '${referer}', '${ip}', ${rating}, 1, '${time}')`
-		).run()
+			'INSERT INTO imginfo (url, referer, ip, rating, total, time) VALUES (?, ?, ?, ?, 1, ?)'
+		).bind(src, referer, ip, rating, time).run()
 	} catch (error) {
 
 	};

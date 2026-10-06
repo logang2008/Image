@@ -1,5 +1,7 @@
 export const runtime = 'edge';
 import { getRequestContext } from '@cloudflare/next-on-pages';
+import { validateImageUpload, invalidUploadResponse } from '@/lib/uploadSecurity';
+import { requireLogin } from '@/lib/requireLogin';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -17,6 +19,9 @@ const corsHeaders = {
 
 
 export async function POST(request) {
+  const unauthorized = await requireLogin(corsHeaders);
+  if (unauthorized) return unauthorized;
+
   const { env, cf, ctx } = getRequestContext();
   const ip = request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || request.socket.remoteAddress;
   const clientIp = ip ? ip.split(',')[0].trim() : 'IP not found';
@@ -27,7 +32,10 @@ export async function POST(request) {
 
   const formData = await request.formData();
   const imageFile = formData.get('file')
-  if (!imageFile) return new Response('Image file not found', { status: 400 });
+  const check = await validateImageUpload(imageFile);
+  if (!check.ok) {
+    return invalidUploadResponse(check.message, corsHeaders);
+  }
   // 将文件数据转换为 ArrayBuffer
   const arrayBuffer = await imageFile.arrayBuffer();
 
@@ -107,9 +115,8 @@ function bufferToBase64(buf) {
 async function insertImageData(env, src, referer, ip, rating, time) {
   try {
     const instdata = await env.prepare(
-      `INSERT INTO imginfo (url, referer, ip, rating, total, time)
-           VALUES ('${src}', '${referer}', '${ip}', ${rating}, 1, '${time}')`
-    ).run()
+      'INSERT INTO imginfo (url, referer, ip, rating, total, time) VALUES (?, ?, ?, ?, 1, ?)'
+    ).bind(src, referer, ip, rating, time).run()
   } catch (error) {
 
   };

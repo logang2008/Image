@@ -1,5 +1,7 @@
 export const runtime = 'edge';
 import { getRequestContext } from '@cloudflare/next-on-pages';
+import { validateImageUpload, invalidUploadResponse } from '@/lib/uploadSecurity';
+import { requireLogin } from '@/lib/requireLogin';
 
 
 
@@ -11,6 +13,9 @@ const corsHeaders = {
 };
 
 export async function POST(request) {
+  const unauthorized = await requireLogin(corsHeaders);
+  if (unauthorized) return unauthorized;
+
   const { env, cf, ctx } = getRequestContext();
 
 
@@ -32,6 +37,16 @@ export async function POST(request) {
         'Access-Control-Max-Age': '86400', // 24小时
       },
     });
+  }
+
+  try {
+    const uploadForm = await request.clone().formData();
+    const check = await validateImageUpload(uploadForm.get('file'));
+    if (!check.ok) {
+      return invalidUploadResponse(check.message, corsHeaders);
+    }
+  } catch (error) {
+    return invalidUploadResponse('无法解析上传内容', corsHeaders);
   }
 
   try {
@@ -119,9 +134,8 @@ export async function POST(request) {
 async function insertImageData(env, src, referer, ip, rating, time) {
   try {
     const instdata = await env.prepare(
-      `INSERT INTO imginfo (url, referer, ip, rating, total, time)
-           VALUES ('${src}', '${referer}', '${ip}', ${rating}, 1, '${time}')`
-    ).run()
+      'INSERT INTO imginfo (url, referer, ip, rating, total, time) VALUES (?, ?, ?, ?, 1, ?)'
+    ).bind(src, referer, ip, rating, time).run()
   } catch (error) {
 
   };

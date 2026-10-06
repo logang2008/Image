@@ -1,5 +1,6 @@
 export const runtime = 'edge';
 import { getRequestContext } from '@cloudflare/next-on-pages';
+import { withFileSecurityHeaders } from '@/lib/uploadSecurity';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -61,8 +62,8 @@ export async function GET(request, { params }) {
     if (!(Referer === `${req_url.origin}/admin` || Referer === `${req_url.origin}/list` || Referer === `${req_url.origin}/`)) {
       await logRequest(env, name, Referer, clientIp);
     }
-    // 如果缓存中存在，直接返回缓存响应
-    return cachedResponse
+    // 如果缓存中存在，直接返回缓存响应（旧缓存可能缺少安全头，统一补上）
+    return withFileSecurityHeaders(cachedResponse)
   }
 
 
@@ -96,10 +97,11 @@ export async function GET(request, { params }) {
 
     const status = object.body ? (request.headers.get("range") !== null ? 206 : 200) : 304
 
-    let response_img = new Response(object.body, {
+    // R2 里存的 content-type 来自上传时客户端自报，不可信，统一过一遍安全头
+    let response_img = withFileSecurityHeaders(new Response(object.body, {
       headers,
       status
-    })
+    }))
 
     if (status === 200) {
       ctx.waitUntil(cache.put(cacheKey, response_img.clone()));
@@ -148,7 +150,7 @@ async function logRequest(env, name, referer, ip) {
   try {
     const nowTime = await get_nowTime()
     await insertTgImgLog(env.IMG, `/rfile/${name}`, referer, ip, nowTime);
-    const setData = await env.IMG.prepare(`UPDATE imginfo SET total = total +1 WHERE url = '/rfile/${name}';`).run()
+    const setData = await env.IMG.prepare('UPDATE imginfo SET total = total +1 WHERE url = ?').bind(`/rfile/${name}`).run()
   } catch (error) {
     console.error('Error logging request:', error);
   }
@@ -158,7 +160,7 @@ async function logRequest(env, name, referer, ip) {
 
 // 从数据库获取鉴黄信息
 async function getRating(DB, url) {
-  const ps = DB.prepare(`SELECT rating FROM imginfo WHERE url='${url}'`);
+  const ps = DB.prepare('SELECT rating FROM imginfo WHERE url = ?').bind(url);
   const result = await ps.first();
   return result ? result.rating : null;
 }

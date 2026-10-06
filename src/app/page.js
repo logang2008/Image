@@ -160,6 +160,12 @@ export default function Home() {
       return;
     }
 
+    if (!Loginuser) {
+      toast.error('请先登录后再上传');
+      setUploading(false);
+      return;
+    }
+
     const formFieldName = selectedOption === "tencent" ? "media" : "file";
     let successCount = 0;
 
@@ -491,7 +497,7 @@ export default function Home() {
 
         <div className="flex flex-row">
           <div className="flex flex-col">
-            <div className="text-gray-800 text-lg">图片或视频上传
+            <div className="text-gray-800 text-lg">图片上传
             </div>
             <div className="mb-4 text-sm text-gray-500">
               上传文件最大 5 MB;本站已托管 <span className="text-cyan-600">{Total}</span> 张图片; 你访问本站的IP是：<span className="text-cyan-600">{IP}</span>
@@ -596,6 +602,7 @@ export default function Home() {
             <input
               id="file-upload"
               type="file"
+              accept=".jpg,.jpeg,.png,.gif,.webp,.bmp,.avif"
               className="hidden"
               onChange={handleFileChange}
               multiple
