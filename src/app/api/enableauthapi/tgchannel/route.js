@@ -7,13 +7,13 @@ import { requireLogin } from '@/lib/requireLogin';
 
 const corsHeaders = {
 	'Access-Control-Allow-Origin': '*',
-	'Access-Control-Allow-Headers': 'Content-Type',
+	'Access-Control-Allow-Headers': 'Content-Type, Authorization',
 	'Access-Control-Max-Age': '86400', // 24 hours
 	'Content-Type': 'application/json'
 };
 
 export async function POST(request) {
-	const unauthorized = await requireLogin(corsHeaders);
+	const unauthorized = await requireLogin(request, corsHeaders);
 	if (unauthorized) return unauthorized;
 
 	const { env, cf, ctx } = getRequestContext();
