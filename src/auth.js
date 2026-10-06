@@ -1,5 +1,6 @@
 import NextAuth from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
+import { validateCredentials } from "@/lib/users";
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   providers: [
@@ -7,42 +8,18 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       {
 
         authorize: async (credentials) => {
-          // console.log('Credentials:', credentials);
-          const adminUser = {
-            username: process.env.BASIC_USER,
-            password: process.env.BASIC_PASS
-          };
-
-          const regularUser = {
-            username: process.env.REGULAR_USER,
-            password: process.env.REGULAR_PASS
-          };
-
-          if (credentials.username === adminUser.username && credentials.password === adminUser.password) {
-            const user = {
-              id: 1,
-              name: process.env.BASIC_USER,
-              email: 'admin@example.com',
-              role: 'admin',
-              createdAt: new Date().toISOString()
-            };
-            return user;
-          }
-
-          // 验证普通用户
-          if (credentials.username === regularUser.username && credentials.password === regularUser.password) {
-            const user = {
-              id: 2,
-              name: process.env.REGULAR_USER,
-              email: 'user@example.com',
-              role: 'user',
-              createdAt: new Date().toISOString()
-            };
-            return user;
-
-          } else {
+          // 多用户校验：USERS 环境变量（JSON 数组）+ 兼容旧的 BASIC_USER/REGULAR_USER
+          const user = validateCredentials(credentials?.username, credentials?.password);
+          if (!user) {
             return Promise.resolve(null);
           }
+          return {
+            id: user.id,
+            name: user.username,
+            email: `${user.username}@example.com`,
+            role: user.role,
+            createdAt: new Date().toISOString()
+          };
         }
       })
   ],
