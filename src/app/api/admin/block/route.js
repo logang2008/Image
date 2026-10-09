@@ -1,5 +1,6 @@
 
 import { getRequestContext } from '@cloudflare/next-on-pages';
+import { requireAdmin } from '@/lib/requireLogin';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -11,6 +12,9 @@ const corsHeaders = {
 export const runtime = 'edge';
 
 export async function PUT(request) {
+  const unauthorized = await requireAdmin();
+  if (unauthorized) return unauthorized;
+
   let { rating, name } = await request.json()
   // 获取客户端的IP地址
   const { env, cf, ctx } = getRequestContext();

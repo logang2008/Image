@@ -19,7 +19,8 @@ export default auth(async (req) => {
 
 
 
-    const isAuthenticated = !!req.auth;
+    // 只认带 role 的真实登录用户；配置异常时 req.auth 可能是不完整对象，不能当作已登录
+    const isAuthenticated = !!req?.auth?.user?.role;
     const isAPI_ADMIN = nextUrl.pathname.startsWith(API_ADMIN);
     const isADMIN_PAGE = nextUrl.pathname.startsWith(ADMIN_PAGE);
 
@@ -64,11 +65,15 @@ export default auth(async (req) => {
         return;
     }
 
-    if (role === 'user') {
-        if (isAPI_ADMIN || isADMIN_PAGE) {
-            return Response.redirect(new URL(LOGIN, nextUrl));
-
-        }
+    // 非 admin 角色（含 USERS 中配置的任意自定义角色）一律不能访问后台
+    if (isAPI_ADMIN) {
+        return Response.json(
+            { status: "fail", message: "You are not logged in by admin !", success: false },
+            { status: 401 },
+        )
+    }
+    if (isADMIN_PAGE) {
+        return Response.redirect(new URL(LOGIN, nextUrl));
     }
 
 })

@@ -47,7 +47,8 @@ export async function POST(request) {
 
     const res = await fetch('https://openai.weixin.qq.com/weixinh5/webapp/h774yvzC2xlB4bIgGfX2stc4kvC85J/cos/upload', {
       method: request.method,
-      headers: request.headers,
+      // 只转发 Content-Type（含 multipart boundary），不把 Cookie / Authorization 带给第三方
+      headers: { 'content-type': request.headers.get('content-type') || '' },
       body: request.body
     });
     // console.log(res);

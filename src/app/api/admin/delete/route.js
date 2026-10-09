@@ -1,5 +1,6 @@
 
 import { getRequestContext } from '@cloudflare/next-on-pages';
+import { requireAdmin } from '@/lib/requireLogin';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -16,6 +17,9 @@ export const runtime = 'edge';
 
 
 export async function DELETE(request) {
+  const unauthorized = await requireAdmin();
+  if (unauthorized) return unauthorized;
+
   let { name } = await request.json()
   const { env, cf, ctx } = getRequestContext();
   try {

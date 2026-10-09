@@ -12,7 +12,8 @@ export async function requireLogin(request, headers = {}) {
     return null;
   }
   const session = await auth();
-  if (session?.user) {
+  // 只认真实登录用户（有 role），配置异常时 auth 可能返回不完整对象，不能放行
+  if (session?.user?.role) {
     return null;
   }
   return Response.json({
@@ -22,5 +23,20 @@ export async function requireLogin(request, headers = {}) {
   }, {
     status: 401,
     headers,
+  });
+}
+
+// 后台接口鉴权：仅 admin 角色放行（middleware 之外的第二道防线）
+export async function requireAdmin() {
+  const session = await auth();
+  if (session?.user?.role === 'admin') {
+    return null;
+  }
+  return Response.json({
+    status: "fail",
+    message: "You are not logged in by admin !",
+    success: false
+  }, {
+    status: 401,
   });
 }

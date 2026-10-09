@@ -45,10 +45,24 @@ export function getUsers() {
   return users;
 }
 
+// 定长比较，避免通过响应耗时逐字符猜出密码
+function safeEqual(a, b) {
+  a = String(a);
+  b = String(b);
+  let diff = a.length ^ b.length;
+  const len = Math.max(a.length, b.length);
+  for (let i = 0; i < len; i++) {
+    diff |= (a.charCodeAt(i) || 0) ^ (b.charCodeAt(i) || 0);
+  }
+  return diff === 0;
+}
+
 // 校验用户名密码，成功返回 {id, username, role}（不含密码），失败返回 null
 export function validateCredentials(username, password) {
-  if (!username || !password) return null;
-  const user = getUsers().find((u) => u.username === username && u.password === password);
-  if (!user) return null;
+  if (typeof username !== 'string' || typeof password !== 'string' || !username || !password) return null;
+  const user = getUsers().find((u) => u.username === username);
+  // 用户不存在时也做一次比较，避免通过耗时判断用户名是否存在
+  const ok = safeEqual(password, user ? user.password : '\u0000' + password);
+  if (!user || !ok) return null;
   return { id: user.id, username: user.username, role: user.role };
 }
