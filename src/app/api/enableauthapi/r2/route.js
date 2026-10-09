@@ -7,6 +7,14 @@ import { requireLogin } from '@/lib/requireLogin';
 
 
 export async function POST(request) {
+	// 放在最前面：下方 IMGRS 未配置的分支也要用到，之前声明在后面会报 "Cannot access before initialization"
+	const corsHeaders = {
+		'Access-Control-Allow-Origin': '*',
+		'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+		'Access-Control-Max-Age': '86400', // 24 hours
+		'Content-Type': 'application/json'
+	};
+
 	const unauthorized = await requireLogin(request, {
 		'Access-Control-Allow-Origin': '*',
 		'Content-Type': 'application/json'
@@ -55,13 +63,6 @@ export async function POST(request) {
 	header.set("content-type", fileType)
 	header.set("content-length", `${file.size}`)
 
-
-	const corsHeaders = {
-		'Access-Control-Allow-Origin': '*',
-		'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-		'Access-Control-Max-Age': '86400', // 24 hours
-		'Content-Type': 'application/json'
-	};
 
 
 
