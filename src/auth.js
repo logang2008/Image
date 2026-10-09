@@ -3,7 +3,7 @@ import CredentialsProvider from "next-auth/providers/credentials";
 import { validateCredentials } from "@/lib/users";
 import { getAuthSecret } from "@/lib/secret";
 
-export const { handlers, signIn, signOut, auth } = NextAuth({
+const authConfig = {
   providers: [
     CredentialsProvider(
       {
@@ -32,8 +32,6 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     strategy: 'jwt',
     maxAge: 24 * 60 * 60, // 会话的过期时间，单位为秒，这里设置为24小时
   },
-  // 必须在环境变量中配置 SECRET，未配置时登录不可用（宁可失败也不使用公开的默认密钥）
-  secret: getAuthSecret(),
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
@@ -63,6 +61,17 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 
   },
   trustHost: true
+};
+
+// secret 每次请求时读取：Cloudflare 的环境变量只在请求上下文中可用，模块加载时读不到。
+// 必须在环境变量中配置 SECRET，未配置时登录不可用（宁可失败也不使用公开的默认密钥）。
+// setter 留空：next-auth 初始化时会尝试写入默认值，忽略即可。
+Object.defineProperty(authConfig, 'secret', {
+  get: getAuthSecret,
+  set() {},
+  enumerable: true,
 });
+
+export const { handlers, signIn, signOut, auth } = NextAuth(authConfig);
 
 
