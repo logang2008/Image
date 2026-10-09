@@ -470,7 +470,7 @@ export default function Home() {
     }
     switch (Loginuser) {
       case 'user':
-        return <LoginButton onClick={handleSignOut}>登出</LoginButton>;
+        return <LoginButton onClick={handleSignOut}>退出</LoginButton>;
       case 'admin':
         return (
           <Link href="/admin">
