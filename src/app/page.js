@@ -31,7 +31,7 @@ export default function Home() {
   const [uploading, setUploading] = useState(false);
   const [IP, setIP] = useState('');
   const [Total, setTotal] = useState('?');
-  const [selectedOption, setSelectedOption] = useState('tgchannel'); // 初始选择第一个选项
+  const [selectedOption, setSelectedOption] = useState('r2'); // 默认使用 R2
   const [isAuthapi, setisAuthapi] = useState(false); // 初始选择第一个选项
   const [Loginuser, setLoginuser] = useState(''); // 初始选择第一个选项
   const [boxType, setBoxtype] = useState("img");
@@ -510,8 +510,8 @@ export default function Home() {
               onChange={handleSelectChange} // 当选择框的值发生变化时触发 handleSelectChange 函数
               className="text-lg p-2 border  rounded text-center w-auto sm:w-auto md:w-auto lg:w-auto xl:w-auto  2xl:w-36">
               {/* <option value="tg" >TG(会失效)</option> */}
-              <option value="tgchannel">TG_Channel</option>
               <option value="r2">R2</option>
+              <option value="tgchannel">TG_Channel</option>
               {/* <option value="vviptuangou">vviptuangou</option> */}
               {/* <option value="58img">58img</option> */}
               {/* <option value="tencent">tencent</option> */}
