@@ -78,7 +78,7 @@ export async function GET(request, { params }) {
     if (object === null) {
       return Response.json({
         status: 404,
-        message: ` ${error.message}`,
+        message: 'File not found',
         success: false
       }
         , {
