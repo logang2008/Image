@@ -53,7 +53,8 @@ export async function POST(request) {
     const res = await fetch(`https://telegra.ph/upload?source=bugtracker`, {
     // const res = await fetch(`https://telegra.ph/upload`, {
       method: request.method,
-      headers: request.headers,
+      // 只转发 Content-Type（含 multipart boundary），不把 Cookie / Authorization 带给第三方
+      headers: { 'content-type': request.headers.get('content-type') || '' },
       body: request.body,
     })
 

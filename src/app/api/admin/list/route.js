@@ -1,5 +1,6 @@
 
 import { getRequestContext } from '@cloudflare/next-on-pages';
+import { requireAdmin } from '@/lib/requireLogin';
 
 // ...
 
@@ -12,6 +13,9 @@ const corsHeaders = {
 
 export const runtime = 'edge';
 export async function POST(request) {
+  const unauthorized = await requireAdmin();
+  if (unauthorized) return unauthorized;
+
   // 获取客户端的IP地址
   const { env, cf, ctx } = getRequestContext();
   // console.log(dd);

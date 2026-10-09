@@ -1,6 +1,7 @@
 import NextAuth from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { validateCredentials } from "@/lib/users";
+import { getAuthSecret } from "@/lib/secret";
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   providers: [
@@ -31,7 +32,8 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     strategy: 'jwt',
     maxAge: 24 * 60 * 60, // 会话的过期时间，单位为秒，这里设置为24小时
   },
-  secret: process.env.SECRET || '00Fv/YUm0enwy04IgP4KoNOWLODe2iJ1tvBzr+4kEZ8=', // 替换为你的安全密钥
+  // 必须在环境变量中配置 SECRET，未配置时登录不可用（宁可失败也不使用公开的默认密钥）
+  secret: getAuthSecret(),
   callbacks: {
     async jwt({ token, user }) {
       if (user) {

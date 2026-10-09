@@ -7,19 +7,18 @@ import { issueApiToken } from "@/lib/apiToken";
 // 上传时携带 Authorization: Bearer <token> 即可
 export async function GET() {
   const session = await auth();
-  if (!session?.user) {
+  if (!session?.user?.role) {
     return Response.json({
       status: 401,
       message: '请先登录',
       success: false
     }, { status: 401 });
   }
-  const data = await issueApiToken({
+  return issueTokenResponse({
     id: session.user.id,
     name: session.user.name,
     role: session.user.role,
   });
-  return Response.json({ success: true, ...data });
 }
 
 // POST /api/user/token：用户名密码直接换取长期 API token（供脚本/自动化调用）
@@ -39,6 +38,18 @@ export async function POST(request) {
       success: false
     }, { status: 401 });
   }
-  const data = await issueApiToken({ id: user.id, name: user.username, role: user.role });
-  return Response.json({ success: true, ...data });
+  return issueTokenResponse({ id: user.id, name: user.username, role: user.role });
+}
+
+async function issueTokenResponse(user) {
+  try {
+    const data = await issueApiToken(user);
+    return Response.json({ success: true, ...data });
+  } catch (error) {
+    return Response.json({
+      status: 500,
+      message: error.message,
+      success: false
+    }, { status: 500 });
+  }
 }

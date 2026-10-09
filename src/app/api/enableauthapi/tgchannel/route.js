@@ -91,7 +91,7 @@ export async function POST(request) {
 			})
 		} else {
 			try {
-				const rating_index = await getRating(env, `${fileData.file_id}`);
+				const rating_index = await getRating(env, data.url);
 				const nowTime = await get_nowTime()
 				await insertImageData(env.IMG, `/cfile/${fileData.file_id}`, Referer, clientIp, rating_index, nowTime);
 
@@ -140,30 +140,6 @@ export async function POST(request) {
 		})
 	}
 
-}
-
-async function getFile_path(env, file_id) {
-	try {
-		const url = `https://api.telegram.org/bot${env.TG_BOT_TOKEN}/getFile?file_id=${file_id}`;
-		const res = await fetch(url, {
-			method: 'GET',
-			headers: {
-				"User-Agent": " Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome"
-			},
-		})
-
-		let responseData = await res.json();
-
-		if (responseData.ok) {
-			const file_path = responseData.result.file_path
-			return file_path
-		} else {
-			return "error";
-		}
-	} catch (error) {
-		return "error";
-
-	}
 }
 
 const getFile = async (response) => {
@@ -233,18 +209,17 @@ async function get_nowTime() {
 
 
 
+// url 为本站的 /api/cfile/ 链接；不能把 api.telegram.org/file/bot<TOKEN>/... 发给第三方审核接口，否则泄露 Bot Token
 async function getRating(env, url) {
 
 	try {
-		const file_path = await getFile_path(env, url);
-
 		const apikey = env.ModerateContentApiKey
 		const ModerateContentUrl = apikey ? `https://api.moderatecontent.com/moderate/?key=${apikey}&` : ""
 
 		const ratingApi = env.RATINGAPI ? `${env.RATINGAPI}?` : ModerateContentUrl;
 
 		if (ratingApi) {
-			const res = await fetch(`${ratingApi}url=https://api.telegram.org/file/bot${env.TG_BOT_TOKEN}/${file_path}`);
+			const res = await fetch(`${ratingApi}url=${url}`);
 			const data = await res.json();
 			const rating_index = data.hasOwnProperty('rating_index') ? data.rating_index : -1;
 

@@ -33,10 +33,12 @@ export async function GET(request, { params }) {
   }
 
   try {
-    const upstream = await fetch(`https://telegra.ph/file/${name}`, {
-      method: request.method,
-      headers: request.headers,
-      body: request.body,
+    // 只转发 Range，不把用户的 Cookie / Authorization 等请求头带给第三方
+    const upstreamHeaders = {};
+    const range = request.headers.get('range');
+    if (range) upstreamHeaders['range'] = range;
+    const upstream = await fetch(`https://telegra.ph/file/${encodeURIComponent(name)}`, {
+      headers: upstreamHeaders,
     })
     const res = withFileSecurityHeaders(upstream)
     if (Referer == req_url.origin + "/admin" || Referer == req_url.origin + "/list" || Referer == req_url.origin + "/") {
